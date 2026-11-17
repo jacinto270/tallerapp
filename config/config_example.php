@@ -14,9 +14,13 @@ $urlBase = 'http://localhost/tallerapp/';
 $claveSecreta = '';
 
 // ---------- Correo ----------
+// 'ninguno': sin correo. Se entra solo con contraseña; las contraseñas iniciales y olvidadas
+//            las pone el admin (temporales, que el usuario cambia al entrar)
 // 'archivo': los correos se guardan en almacen/correos (solo para desarrollo)
-// 'smtp': se envían de verdad (obligatorio en producción)
-$correoModo = 'archivo';
+// 'smtp': se envían de verdad (activa el segundo paso, los enlaces y los avisos por email)
+$correoModo = 'ninguno';
+// Segundo paso al entrar (código por email). Solo funciona si hay correo ('smtp')
+$dosPasos = false;
 $correoRemitente = '';
 $correoNombre = 'Taller Genil';
 $smtpServidor = '';

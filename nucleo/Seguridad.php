@@ -22,6 +22,20 @@ final class Seguridad
         return self::config('entorno', 'produccion') !== 'desarrollo';
     }
 
+    // ¿Se pueden enviar correos? 'smtp' siempre; 'archivo' solo en desarrollo; 'ninguno', no.
+    // Sin correo: sin segundo paso, sin enlaces por email; las contraseñas iniciales las pone el admin
+    public static function hayCorreo(): bool
+    {
+        $modo = self::config('correoModo', 'ninguno');
+        return $modo === 'smtp' || ($modo === 'archivo' && !self::enProduccion());
+    }
+
+    // Segundo paso (código por email al entrar): solo si se activa y hay correo
+    public static function dosPasos(): bool
+    {
+        return (bool) self::config('dosPasos', false) && self::hayCorreo();
+    }
+
     public static function esHttps(): bool
     {
         return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')

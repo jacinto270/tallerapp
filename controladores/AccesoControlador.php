@@ -43,14 +43,16 @@ class AccesoControlador extends Controlador
 
         $usuario = $email !== '' && strlen($email) <= 190 ? $this->usuarios->buscarPorEmail($email) : null;
         $correcta = password_verify($password, $usuario['password_hash'] ?? self::HASH_RELLENO);
-        $puedeEntrar = $correcta && $usuario && $usuario['activo'] && $usuario['email_verificado'] !== null;
+        // Sin correo no hay forma de verificar emails, así que no se exige
+        $emailValido = $usuario && ($usuario['email_verificado'] !== null || !Seguridad::hayCorreo());
+        $puedeEntrar = $correcta && $usuario && $usuario['activo'] && $emailValido;
 
         if (!$puedeEntrar) {
             $this->usuarios->apuntar('login_fallo', $usuario['id'] ?? null, $email,
                 $correcta ? 'Cuenta de baja o email sin verificar' : 'Contraseña incorrecta o email desconocido');
             // Con la contraseña buena y el email nuevo sin confirmar, se le dice qué hacer
             // (no revela nada: solo lo ve quien ya sabe la contraseña)
-            $pendienteVerificar = $correcta && $usuario && $usuario['activo'] && $usuario['email_verificado'] === null;
+            $pendienteVerificar = $correcta && $usuario && $usuario['activo'] && !$emailValido;
             $this->mostrar('acceso_login', [
                 'titulo' => 'Entrar',
                 // En los demás casos, el mismo mensaje: no se revela si el email existe
@@ -64,6 +66,11 @@ class AccesoControlador extends Controlador
 
         if (password_needs_rehash($usuario['password_hash'], PASSWORD_ARGON2ID)) {
             $this->usuarios->actualizarHash($usuario['id'], Seguridad::hashPassword($password));
+        }
+
+        // Sin segundo paso (no hay correo o está desactivado): entra ya
+        if (!Seguridad::dosPasos()) {
+            $this->completarEntrada($this->usuarios->buscar($usuario['id']));
         }
 
         // Contraseña correcta: aún no entra. Se manda el código del segundo paso
@@ -85,9 +92,25 @@ class AccesoControlador extends Controlador
 
     // ---------- Paso 2: código enviado por email ----------
 
+    // Entrada completada: nueva sesión y vuelta a la página que quería ver
+    private function completarEntrada(array $usuario): never
+    {
+        $this->usuarios->anotarAcceso($usuario['id']);
+        $this->usuarios->apuntar('login_ok', $usuario['id'], $usuario['email']);
+        Seguridad::entrar($usuario);
+
+        // Solo direcciones de esta aplicación (se guardó como parámetros de index.php)
+        $volver = $_SESSION['volver'] ?? '';
+        unset($_SESSION['volver']);
+        $this->redirigir('index.php' . ($volver !== '' ? '?' . $volver : ''));
+    }
+
     // index.php?accion=codigo
     public function codigo(): void
     {
+        if (!Seguridad::dosPasos()) {
+            $this->redirigir('index.php?accion=login');
+        }
         $usuario = $this->usuarioEnDosPasos();
         if (!$usuario) {
             Seguridad::aviso('Vuelve a escribir tu email y tu contraseña.', 'error');
@@ -115,14 +138,7 @@ class AccesoControlador extends Controlador
 
         if (strlen($codigo) === 6 && hash_equals($vigente['hash'], Seguridad::huella($usuario['id'] . ':' . $codigo))) {
             $this->usuarios->marcarUsado($vigente['id']);
-            $this->usuarios->anotarAcceso($usuario['id']);
-            $this->usuarios->apuntar('login_ok', $usuario['id'], $usuario['email']);
-            Seguridad::entrar($usuario);
-
-            // Vuelve a la página que quería ver (solo direcciones de esta aplicación)
-            $volver = $_SESSION['volver'] ?? '';
-            unset($_SESSION['volver']);
-            $this->redirigir('index.php' . ($volver !== '' ? '?' . $volver : ''));
+            $this->completarEntrada($usuario);
         }
 
         $this->usuarios->sumarIntento($vigente['id']);
@@ -137,7 +153,7 @@ class AccesoControlador extends Controlador
     // index.php?accion=reenviar_codigo (POST)
     public function reenviarCodigo(): void
     {
-        $usuario = $this->usuarioEnDosPasos();
+        $usuario = Seguridad::dosPasos() ? $this->usuarioEnDosPasos() : null;
         if (!$usuario || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirigir('index.php?accion=login');
         }
@@ -218,7 +234,8 @@ class AccesoControlador extends Controlador
     // Entra sin ficha de cliente: no ve ninguna factura hasta que el admin la vincula
     public function registro(): void
     {
-        $datos = ['titulo' => 'Crear cuenta', 'errores' => [], 'valores' => [], 'enviado' => false];
+        $datos = ['titulo' => 'Crear cuenta', 'errores' => [], 'valores' => [], 'enviado' => false,
+                  'sinCorreo' => !Seguridad::hayCorreo()];
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->mostrar('acceso_registro', $datos);
             return;
@@ -343,9 +360,11 @@ class AccesoControlador extends Controlador
     // index.php?accion=recuperar
     public function recuperar(): void
     {
-        $datos = ['titulo' => 'Recuperar la contraseña', 'errores' => [], 'enviado' => false];
+        $datos = ['titulo' => 'Recuperar la contraseña', 'errores' => [], 'enviado' => false,
+                  'sinCorreo' => !Seguridad::hayCorreo()];
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Sin correo no se puede enviar el enlace: la vista explica cómo pedir una contraseña temporal
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$datos['sinCorreo']) {
             $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
 
             if ($this->usuarios->contarRecientes(['recuperar'], 'ip', Seguridad::ip(), self::MINUTOS_BLOQUEO) >= 5) {

@@ -12,7 +12,12 @@
       </ul>
     <?php endif; ?>
 
-    <?php if ($enviado): ?>
+    <?php if ($sinCorreo): ?>
+      <p>Pide en el taller (en persona o por teléfono) que te pongan una <strong>contraseña temporal</strong>.</p>
+      <p class="suave">Cuando entres con ella, la aplicación te pedirá que elijas una nueva que solo sepas tú.
+         Por seguridad, el taller te pedirá que confirmes quién eres (DNI).</p>
+      <p><a class="boton" href="index.php?accion=login">Volver a entrar</a></p>
+    <?php elseif ($enviado): ?>
       <p class="aviso">Si ese email está dado de alta, en unos minutos recibirás un enlace para elegir una contraseña nueva. Caduca en 1 hora.</p>
       <p><a href="index.php?accion=login">Volver a entrar</a></p>
     <?php else: ?>

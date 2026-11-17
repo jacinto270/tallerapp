@@ -65,15 +65,20 @@ $alertas = ['login_fallo', 'codigo_fallo', 'bloqueo', 'enlace_invalido', 'regist
               <?php elseif ($u['rol'] === 'usuario'): ?><br><span class="chapa chapa-alerta">Sin ficha</span><?php endif; ?></td>
             <td><?= e($u['dni']) ?></td>
             <td><?= e($u['email']) ?><br>
-              <?= $u['email_verificado'] ? '<span class="verificado">✓ Verificado</span>'
-                 : '<span class="pendiente">' . ($u['cuenta_activada'] ? 'Email nuevo sin verificar' : 'Pendiente de activar') . '</span>' ?></td>
+              <?php if (!$u['cuenta_activada']): ?>
+                <span class="pendiente"><?= Seguridad::hayCorreo() ? 'Pendiente de activar' : 'Sin contraseña: ponle una temporal' ?></span>
+              <?php elseif ($u['email_verificado']): ?>
+                <span class="verificado">✓ Verificado</span>
+              <?php elseif (Seguridad::hayCorreo()): ?>
+                <span class="pendiente">Email nuevo sin verificar</span>
+              <?php endif; ?></td>
             <td><?= e($u['telefono']) ?></td>
             <td><span class="chapa <?= $u['rol'] === 'admin' ? 'chapa-admin' : 'chapa-facturada' ?>"><?= $u['rol'] === 'admin' ? 'Admin' : 'Usuario' ?></span></td>
             <td><?= fecha($u['fecha_alta']) ?><br><span class="suave"><?= $u['creado_por'] ? e('por ' . $u['creado_por']) : ($u['rol'] === 'usuario' ? 'Registro propio' : '') ?></span></td>
             <td><?= $u['ultimo_acceso'] ? e(date('d/m/Y H:i', strtotime($u['ultimo_acceso']))) : '<span class="suave">Nunca</span>' ?></td>
             <td class="num">
               <a class="boton boton-mini boton-secundario en-linea" href="index.php?accion=usuario_editar&amp;id=<?= (int) $u['id'] ?>">Editar</a>
-              <?php if (!$u['cuenta_activada'] || !$u['email_verificado']): ?>
+              <?php if (Seguridad::hayCorreo() && (!$u['cuenta_activada'] || !$u['email_verificado'])): ?>
                 <form method="post" action="index.php?accion=usuario_reenviar" class="en-linea">
                   <?= csrf() ?>
                   <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">

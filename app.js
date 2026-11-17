@@ -369,10 +369,10 @@
       { t: 'Pasa el ratón (o el dedo) por los gráficos para ver el detalle. Debajo de cada uno tienes los datos en una tabla.', s: '.graficos' },
     ],
     login: [
-      { t: '¡Bienvenido a boxes! Entra con tu email y tu contraseña. Después te mandaré un código al email: así sabemos que eres tú.', s: '.acceso-caja' },
+      { t: '¡Bienvenido a boxes! Entra con tu email y tu contraseña. ¿Aún no tienes cuenta? Créala con el enlace de abajo.', s: '.acceso-caja' },
     ],
     registro: [
-      { t: '¡Bienvenido! Rellena tus datos y elige una contraseña. Te mandaremos un email para confirmar que es tuyo.', s: '.acceso-caja' },
+      { t: '¡Bienvenido! Rellena tus datos y elige una contraseña de al menos 8 caracteres, con letras y números.', s: '.acceso-caja' },
       { t: 'Para ver tus facturas, el taller vinculará tu cuenta con tu ficha de cliente cuando enseñes tu DNI en el mostrador.' },
     ],
     cambiar_password: [

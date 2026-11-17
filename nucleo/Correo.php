@@ -12,6 +12,10 @@ final class Correo
         if (!filter_var($para, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
+        // Modo sin correo: no se envía nada (la aplicación ya funciona sin emails)
+        if (!Seguridad::hayCorreo()) {
+            return false;
+        }
 
         if (Seguridad::config('correoModo', 'smtp') === 'archivo') {
             if (Seguridad::enProduccion()) {

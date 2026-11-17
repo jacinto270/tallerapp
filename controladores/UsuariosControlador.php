@@ -43,16 +43,25 @@ class UsuariosControlador extends Controlador
 
         [$datos, $rol, $clienteId, $errores, $valores, $nuevaFicha] = $this->leerFormulario(null);
 
+        // Sin correo no hay enlace de activación: el admin pone una contraseña temporal
+        $sinCorreo = !Seguridad::hayCorreo();
+        $temporal = (string) ($_POST['password'] ?? '');
+        if ($sinCorreo) {
+            $errores = array_merge($errores, Validar::password($temporal, (string) ($_POST['password2'] ?? ''), $valores));
+        }
+
         if (!$errores) {
             try {
                 $yo = Seguridad::usuario();
                 if ($nuevaFicha) {
                     $clienteId = $this->clientes->crear($datos['nombre'], $datos['apellidos'], $datos['telefono']);
                 }
-                $id = $this->usuarios->crear($datos, $rol, $clienteId, $yo['id']);
+                $id = $this->usuarios->crear($datos, $rol, $clienteId, $yo['id'], $sinCorreo ? Seguridad::hashPassword($temporal) : null);
                 $this->usuarios->apuntar('alta', $id, $datos['email'], "Alta como $rol por {$yo['nombre']} {$yo['apellidos']}");
                 $nuevo = $this->usuarios->buscar($id);
-                if ($this->acceso->enviarEnlace($nuevo, 'activar')) {
+                if ($sinCorreo) {
+                    Seguridad::aviso("{$datos['nombre']} {$datos['apellidos']} dado de alta. Dale la contraseña temporal en persona o por teléfono: al entrar tendrá que cambiarla.");
+                } elseif ($this->acceso->enviarEnlace($nuevo, 'activar')) {
                     Seguridad::aviso("Usuario dado de alta. Le hemos enviado a {$datos['email']} el enlace para verificar su email y elegir su contraseña.");
                 } else {
                     Seguridad::aviso('Usuario dado de alta, pero no se ha podido enviar el email de activación. Usa «Reenviar activación».', 'error');
@@ -100,7 +109,8 @@ class UsuariosControlador extends Controlador
         }
 
         if (!$errores) {
-            $emailCambiado = $datos['email'] !== $usuario['email'];
+            // Con correo, un email nuevo hay que verificarlo; sin correo, se cambia y ya
+            $emailCambiado = $datos['email'] !== $usuario['email'] && Seguridad::hayCorreo();
             try {
                 if ($nuevaFicha) {
                     $clienteId = $this->clientes->crear($datos['nombre'], $datos['apellidos'], $datos['telefono']);
@@ -232,6 +242,10 @@ class UsuariosControlador extends Controlador
     public function reenviar(): void
     {
         $usuario = $this->usuarioDelFormulario();
+        if (!Seguridad::hayCorreo()) {
+            Seguridad::aviso('No hay correo configurado: ponle una contraseña temporal desde «Editar».', 'error');
+            $this->redirigir('index.php?accion=usuarios');
+        }
         $tipo = match (true) {
             !$usuario || !$usuario['activo'] => null,
             $usuario['password_hash'] === null => 'activar',
@@ -265,7 +279,8 @@ class UsuariosControlador extends Controlador
             Seguridad::aviso('Tu propia contraseña se cambia en «Mi cuenta».', 'error');
             $this->redirigir('index.php?accion=cambiar_password');
         }
-        if ($usuario['password_hash'] === null || $usuario['email_verificado'] === null) {
+        // Con correo, primero tiene que activar su cuenta él; sin correo, el admin es la única vía
+        if (Seguridad::hayCorreo() && ($usuario['password_hash'] === null || $usuario['email_verificado'] === null)) {
             Seguridad::aviso('Este usuario aún no ha activado su cuenta ni verificado su email: usa «Reenviar activación».', 'error');
             $this->redirigir($volver);
         }
@@ -299,7 +314,9 @@ class UsuariosControlador extends Controlador
     {
         $usuario = $this->usuarioDelFormulario();
         $yo = Seguridad::usuario();
-        if (!$usuario || !$usuario['activo'] || $usuario['password_hash'] === null) {
+        if (!Seguridad::hayCorreo()) {
+            Seguridad::aviso('No hay correo configurado: usa «Poner una contraseña temporal».', 'error');
+        } elseif (!$usuario || !$usuario['activo'] || $usuario['password_hash'] === null) {
             Seguridad::aviso('Solo para usuarios de alta que ya activaron su cuenta.', 'error');
         } elseif ($this->acceso->enviarEnlace($usuario, 'restablecer')) {
             $this->usuarios->apuntar('enlace_password_admin', $usuario['id'], $usuario['email'],
@@ -337,6 +354,7 @@ class UsuariosControlador extends Controlador
         $this->mostrar('usuario_form', [
             'titulo' => $editando ? 'Editar usuario' : (($valores['rol'] ?? '') === 'admin' ? 'Nuevo administrador' : 'Nuevo cliente'),
             'puedeSinFicha' => $editando && $editando['rol'] === 'usuario' && $editando['cliente_id'] === null,
+            'hayCorreo' => Seguridad::hayCorreo(),
             'errores' => $errores,
             'valores' => $valores,
             'editando' => $editando,

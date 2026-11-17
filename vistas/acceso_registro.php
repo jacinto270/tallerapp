@@ -2,7 +2,13 @@
 
 <div class="acceso">
   <section class="tarjeta acceso-caja acceso-ancha">
-    <?php if ($enviado): ?>
+    <?php if ($enviado && $sinCorreo): ?>
+      <h2>Cuenta creada</h2>
+      <p class="aviso">Si es una cuenta nueva, ya puedes entrar con tu email y tu contraseña.</p>
+      <p>Para ver tus facturas, enseña tu DNI en el taller: vincularán tu cuenta con tu ficha de cliente.</p>
+      <p class="acceso-nota">Si ya tenías cuenta, entra con tu contraseña de siempre o pide en el taller una contraseña temporal.</p>
+      <p><a class="boton" href="index.php?accion=login">Ir a entrar</a></p>
+    <?php elseif ($enviado): ?>
       <h2>Revisa tu email</h2>
       <p class="aviso">Si los datos son correctos, te hemos enviado un enlace para confirmar tu email<?= isset($email) ? ' (<strong>' . e($email) . '</strong>)' : '' ?>.
          Ábrelo para activar tu cuenta: caduca en 48 horas.</p>
@@ -46,14 +52,14 @@
           </div>
           <div>
             <label for="password">Contraseña</label>
-            <input type="password" name="password" id="password" required minlength="12" maxlength="128" autocomplete="new-password">
+            <input type="password" name="password" id="password" required minlength="8" maxlength="128" autocomplete="new-password">
           </div>
           <div>
             <label for="password2">Repite la contraseña</label>
-            <input type="password" name="password2" id="password2" required minlength="12" maxlength="128" autocomplete="new-password">
+            <input type="password" name="password2" id="password2" required minlength="8" maxlength="128" autocomplete="new-password">
           </div>
         </div>
-        <small class="ayuda-campo">Al menos 12 caracteres, con letras y números, y sin tu nombre, DNI, email ni teléfono.</small>
+        <small class="ayuda-campo">Al menos 8 caracteres, con letras y números, y sin tu nombre, DNI, email ni teléfono.</small>
 
         <!-- Trampa para robots: oculto a las personas; si llega relleno, no se crea la cuenta -->
         <div class="campo-trampa" aria-hidden="true">

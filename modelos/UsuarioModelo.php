@@ -72,14 +72,17 @@ class UsuarioModelo
         $this->pdo->prepare("UPDATE usuarios SET email_verificado = NOW() WHERE id = ?")->execute([$id]);
     }
 
-    // $clienteId: la ficha de cliente de un usuario normal (null para un admin)
-    public function crear(array $datos, string $rol, ?int $clienteId, ?int $creadoPor): int
+    // $clienteId: la ficha de cliente de un usuario normal (null para un admin).
+    // $hashTemporal: sin correo, el admin pone una contraseña inicial que habrá que cambiar al entrar
+    public function crear(array $datos, string $rol, ?int $clienteId, ?int $creadoPor, ?string $hashTemporal = null): int
     {
         $insertar = $this->pdo->prepare(
-            "INSERT INTO usuarios (nombre, apellidos, dni, email, telefono, rol, cliente_id, creado_por)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            "INSERT INTO usuarios (nombre, apellidos, dni, email, telefono, rol, cliente_id, creado_por,
+                                   password_hash, debe_cambiar_password)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $insertar->execute([$datos['nombre'], $datos['apellidos'], $datos['dni'], $datos['email'],
-                            $datos['telefono'], $rol, $clienteId, $creadoPor]);
+                            $datos['telefono'], $rol, $clienteId, $creadoPor,
+                            $hashTemporal, $hashTemporal !== null ? 1 : 0]);
         return (int) $this->pdo->lastInsertId();
     }
 

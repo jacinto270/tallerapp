@@ -24,15 +24,16 @@ Está hecha en **PHP 8 sin frameworks**, con el patrón **MVC** (modelos, vistas
 
 ## Seguridad
 
-- **Entrada en dos pasos**: contraseña y código de 6 cifras por email (caduca en 10 minutos, con 5 intentos).
-- **Contraseñas con Argon2id**. Los códigos y los enlaces de un solo uso se guardan como HMAC, nunca en claro.
-- **Altas**: se piden nombre, apellidos, DNI o NIE (se comprueba la letra), email y teléfono, y el email siempre se verifica con un enlace.
-  - Si da el alta el admin, el usuario recibe un enlace para verificar su email y elegir su contraseña; nadie más la conoce.
-  - **Registro público** con aceptación del tratamiento de datos, campo trampa contra robots y un máximo de 5 registros por hora y conexión. Si el email o el DNI ya existen, la respuesta es la misma (no se revela quién tiene cuenta) y se avisa al dueño del email.
+- **Funciona con o sin correo** (`$correoModo` en `config/config.php`):
+  - **Sin correo** (`'ninguno'`, el modo por defecto): se entra con email y contraseña. Las contraseñas iniciales y las olvidadas las pone el admin como **temporales**, y el usuario tiene que cambiarlas al entrar, antes de hacer nada más.
+  - **Con correo** (`'smtp'`): enlaces de activación, verificación del email, «¿Has olvidado la contraseña?» y avisos por email. Con `$dosPasos = true` se añade un **segundo paso** al entrar: un código de 6 cifras por email que caduca en 10 minutos.
+- **Contraseñas con Argon2id**: mínimo 8 caracteres, con letras y números, sin datos personales y sin contraseñas típicas. Los enlaces y códigos de un solo uso se guardan como HMAC, nunca en claro.
+- **Altas**: se piden nombre, apellidos, DNI o NIE (se comprueba la letra), email y teléfono.
+  - **Registro público** con aceptación del tratamiento de datos, campo trampa contra robots y un máximo de 5 registros por hora y conexión. Si el email o el DNI ya existen, la respuesta es la misma (no se revela quién tiene cuenta).
 - **Contraseñas**:
   - Cada usuario cambia la suya escribiendo la actual, con bloqueo tras 5 fallos.
-  - El admin puede enviar un enlace de cambio o poner una **contraseña temporal**, que el usuario tiene que sustituir al entrar antes de hacer nada más.
-  - Cualquier cambio de contraseña **cierra las demás sesiones abiertas** y se avisa por email (nunca se envía la contraseña).
+  - El admin puede poner una **contraseña temporal** a cualquier usuario (y, con correo, también enviarle un enlace de cambio).
+  - Cualquier cambio de contraseña **cierra las demás sesiones abiertas**.
 - **Roles comprobados en el servidor** en cada petición. Un cliente que pida una factura ajena recibe un 404. Una baja o un cambio de rol se aplican al momento, aunque el usuario esté conectado.
 - **Freno a la fuerza bruta**: bloqueo de 15 minutos tras 5 fallos por cuenta o 20 por IP. Los mensajes de error no revelan qué emails existen.
 - **Token CSRF** en todos los formularios y comprobación de `Origin`.
@@ -47,7 +48,7 @@ Está hecha en **PHP 8 sin frameworks**, con el patrón **MVC** (modelos, vistas
 - PHP **8.1 o superior** (8.2 recomendado) con `pdo_mysql`, `openssl` y `mbstring`, y soporte para Argon2id (viene en los PHP oficiales y en XAMPP).
 - MySQL 5.7+ o MariaDB 10.3+.
 - **Apache** con `AllowOverride All` y los módulos `mod_headers` y `mod_alias` (XAMPP ya viene así). Con otro servidor, como nginx, hay que reproducir las reglas de `.htaccess`.
-- Un servidor **SMTP** para enviar los correos en producción.
+- Opcional: un servidor **SMTP**, si quieres enlaces por email y el segundo paso al entrar.
 
 ## Instalación
 
@@ -74,9 +75,11 @@ Está hecha en **PHP 8 sin frameworks**, con el patrón **MVC** (modelos, vistas
    php herramientas/crear_admin.php --nombre="Nombre" --apellidos="Apellidos" \
        --dni=12345678Z --email=tu@email.es --telefono=600000000
    ```
-   Te mostrará un enlace de activación (caduca en 48 horas). Ábrelo y elige tu contraseña: mínimo 12 caracteres, con letras y números.
+   Te mostrará un enlace de activación (caduca en 48 horas). Ábrelo y elige tu contraseña: mínimo 8 caracteres, con letras y números.
 
-5. **Entra** en `http://localhost/tallerapp/`. En desarrollo (`$correoModo = 'archivo'`) los correos no se envían: se guardan en `almacen/correos/` y se leen en `index.php?accion=correos_dev`, que solo funciona desde el propio ordenador.
+5. **Entra** en `http://localhost/tallerapp/` con tu email y tu contraseña. Desde *Usuarios* puedes dar de alta a otros administradores y clientes, con una contraseña temporal que cambiarán al entrar.
+
+   Para probar los correos sin un servidor real, pon `$correoModo = 'archivo'`: se guardan en `almacen/correos/` y se leen en `index.php?accion=correos_dev`, que solo funciona en desarrollo y desde el propio ordenador.
 
 ## Antes de publicar en internet
 
@@ -87,7 +90,7 @@ En `config/config.php`:
 | `$entorno` | `'produccion'`: obliga a usar HTTPS, oculta los errores y desactiva la bandeja de correos de desarrollo |
 | `$urlBase` | Tu dirección con `https://` y terminada en `/` |
 | `$claveSecreta` | Una propia, de 64 caracteres; nunca la del ejemplo ni la de otra instalación |
-| `$correoModo` | `'smtp'`, con `$smtpServidor`, `$smtpPuerto` (587 o 465), `$smtpUsuario`, `$smtpPassword` y `$correoRemitente`. Sin esto no llegan los códigos y nadie puede entrar |
+| `$correoModo` | `'ninguno'` si no tienes correo (las contraseñas iniciales y olvidadas las pone el admin). Si lo tienes, `'smtp'` con `$smtpServidor`, `$smtpPuerto` (587 o 465), `$smtpUsuario`, `$smtpPassword` y `$correoRemitente`, y si quieres, `$dosPasos = true` |
 | `$usuario` / `$password` | Un usuario de MySQL solo para la aplicación, **nunca `root`** (ver abajo) |
 
 **Usuario de MySQL con los permisos justos**: puede leer y escribir datos, pero no borrar tablas ni crear usuarios.

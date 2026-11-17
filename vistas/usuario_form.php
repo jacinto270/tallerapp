@@ -11,11 +11,16 @@
 <form method="post" action="index.php?accion=<?= $editando ? 'usuario_actualizar' : 'usuario_guardar' ?>" class="alta form-usuario">
   <?php if ($editando): ?>
     <input type="hidden" name="id" value="<?= (int) $editando['id'] ?>">
-    <p class="suave">Si cambias el email, el usuario no podrá entrar hasta que confirme el nuevo con el enlace que le enviaremos.
-       También avisaremos al email antiguo.</p>
-  <?php else: ?>
+    <?php if ($hayCorreo): ?>
+      <p class="suave">Si cambias el email, el usuario no podrá entrar hasta que confirme el nuevo con el enlace que le enviaremos.
+         También avisaremos al email antiguo.</p>
+    <?php endif; ?>
+  <?php elseif ($hayCorreo): ?>
     <p class="suave">Al guardar, el usuario recibe un email para verificar que la dirección es suya y elegir su contraseña.
        Nadie más la conoce, tampoco el admin.</p>
+  <?php else: ?>
+    <p class="suave">Ponle una contraseña temporal y dásela en persona o por teléfono. La primera vez que entre
+       tendrá que cambiarla por una que solo sepa él.</p>
   <?php endif; ?>
 
   <div class="rejilla-campos">
@@ -76,6 +81,20 @@
     <small class="ayuda-campo">Solo aparecen los clientes que aún no tienen cuenta.</small>
   </div>
 
+  <?php if (!$editando && !$hayCorreo): ?>
+    <div class="rejilla-campos">
+      <div>
+        <label for="alta_password">Contraseña temporal</label>
+        <input type="password" name="password" id="alta_password" required minlength="8" maxlength="128" autocomplete="new-password">
+      </div>
+      <div>
+        <label for="alta_password2">Repítela</label>
+        <input type="password" name="password2" id="alta_password2" required minlength="8" maxlength="128" autocomplete="new-password">
+      </div>
+    </div>
+    <small class="ayuda-campo">Al menos 8 caracteres, con letras y números. Al entrar por primera vez tendrá que cambiarla.</small>
+  <?php endif; ?>
+
   <?= csrf() ?>
   <div class="acciones-form">
     <button><?= $editando ? 'Guardar cambios' : 'Dar de alta' ?></button>
@@ -88,10 +107,11 @@
     <h3><?= icono('llave') ?> Contraseña</h3>
     <?php if ($esYo): ?>
       <p>Tu propia contraseña la cambias desde <a href="index.php?accion=cambiar_password">Mi cuenta → Cambiar la contraseña</a>.</p>
-    <?php elseif ($editando['password_hash'] === null || $editando['email_verificado'] === null): ?>
+    <?php elseif ($hayCorreo && ($editando['password_hash'] === null || $editando['email_verificado'] === null)): ?>
       <p class="suave">Todavía no ha activado su cuenta o no ha verificado su email. Usa «Reenviar activación» o «Reenviar verificación» en la lista de usuarios.</p>
     <?php else: ?>
       <div class="opciones-contrasena">
+        <?php if ($hayCorreo): ?>
         <div>
           <h4>Opción recomendada: que la cambie él</h4>
           <p class="suave">Le llega un enlace a <strong><?= e($editando['email']) ?></strong> (caduca en 1 hora) y elige una nueva. Nadie más la conoce.</p>
@@ -102,9 +122,10 @@
             <button class="boton-secundario">Enviarle un enlace</button>
           </form>
         </div>
+        <?php endif; ?>
         <div>
           <h4>Poner una contraseña temporal</h4>
-          <p class="suave">Para cuando no puede usar su email. Dásela en persona o por teléfono, nunca por escrito.
+          <p class="suave"><?= $hayCorreo ? 'Para cuando no puede usar su email. ' : 'Por ejemplo, si la ha olvidado. ' ?>Dásela en persona o por teléfono, nunca por escrito.
              Al entrar tendrá que cambiarla, y se cerrarán las sesiones que tenga abiertas.</p>
           <form method="post" action="index.php?accion=usuario_password" class="acceso-form"
                 data-confirmar="<?= e('¿Poner una contraseña temporal a ' . $editando['nombre'] . ' ' . $editando['apellidos'] . '?') ?>" data-aceptar="Guardar">
@@ -112,9 +133,9 @@
             <input type="hidden" name="id" value="<?= (int) $editando['id'] ?>">
             <input type="text" name="usuario" value="<?= e($editando['email']) ?>" autocomplete="off" hidden readonly>
             <label for="temporal">Contraseña temporal</label>
-            <input type="password" name="password" id="temporal" required minlength="12" maxlength="128" autocomplete="new-password">
+            <input type="password" name="password" id="temporal" required minlength="8" maxlength="128" autocomplete="new-password">
             <label for="temporal2">Repítela</label>
-            <input type="password" name="password2" id="temporal2" required minlength="12" maxlength="128" autocomplete="new-password">
+            <input type="password" name="password2" id="temporal2" required minlength="8" maxlength="128" autocomplete="new-password">
             <button class="boton-peligro">Guardar contraseña temporal</button>
           </form>
         </div>

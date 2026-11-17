@@ -23,11 +23,11 @@
       <input type="password" name="actual" id="actual" required maxlength="128" autocomplete="current-password" autofocus>
 
       <label for="password">Contraseña nueva</label>
-      <input type="password" name="password" id="password" required minlength="12" maxlength="128" autocomplete="new-password">
-      <small class="ayuda-campo">Al menos 12 caracteres, con letras y números. Mejor una frase que solo tú recuerdes.</small>
+      <input type="password" name="password" id="password" required minlength="8" maxlength="128" autocomplete="new-password">
+      <small class="ayuda-campo">Al menos 8 caracteres, con letras y números. Mejor una frase que solo tú recuerdes.</small>
 
       <label for="password2">Repite la contraseña nueva</label>
-      <input type="password" name="password2" id="password2" required minlength="12" maxlength="128" autocomplete="new-password">
+      <input type="password" name="password2" id="password2" required minlength="8" maxlength="128" autocomplete="new-password">
 
       <button class="boton-ancho">Guardar contraseña</button>
     </form>

@@ -5,8 +5,10 @@ final class Validar
 {
     // Contraseñas tan comunes que se prueban las primeras en cualquier ataque
     private const COMUNES = [
-        '123456789012', 'contraseña123', 'contrasena123', 'password1234', 'qwertyuiop12',
-        'tallergenil1', 'administrador', 'abcdefghijkl', '111111111111', 'iloveyou1234',
+        '12345678a', 'a12345678', '1234abcd', 'abcd1234', 'abc12345', 'abc123456', 'password1', 'password12',
+        'password123', 'contraseña1', 'contrasena1', 'contraseña123', 'contrasena123', 'qwerty123', 'qwerty12',
+        'iloveyou1', 'taller123', 'tallergenil1', 'admin123', 'admin1234', 'usuario1', 'usuario123',
+        'granada1', 'granada123', 'futbol123', 'madrid123', 'barcelona1', '1q2w3e4r', '1qaz2wsx', 'q1w2e3r4',
     ];
 
     public static function nombre(string $texto, int $maximo): ?string
@@ -61,8 +63,8 @@ final class Validar
     {
         $errores = [];
         $largo = mb_strlen($password);
-        if ($largo < 12) {
-            $errores[] = 'La contraseña debe tener al menos 12 caracteres.';
+        if ($largo < 8) {
+            $errores[] = 'La contraseña debe tener al menos 8 caracteres.';
         }
         if ($largo > 128) {
             $errores[] = 'La contraseña no puede tener más de 128 caracteres.';

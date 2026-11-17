@@ -15,7 +15,9 @@
 
   <section class="tarjeta">
     <h3><?= icono('llave') ?> Seguridad</h3>
-    <p>Para entrar usas tu contraseña y un código que te enviamos por email cada vez.</p>
+    <p><?= Seguridad::dosPasos()
+        ? 'Para entrar usas tu contraseña y un código que te enviamos por email cada vez.'
+        : 'Para entrar usas tu email y tu contraseña. No la compartas con nadie.' ?></p>
     <p><a class="boton boton-secundario" href="index.php?accion=cambiar_password">Cambiar la contraseña</a></p>
     <p class="suave">Si ves algo raro en tus datos, llama al taller.</p>
     <?php if ($yo['rol'] === 'usuario' && !$yo['cliente_id']): ?>

@@ -1,1 +1,43 @@
+# =====================================================================
+#  Taller Genil · lo que NUNCA se sube a GitHub
+# =====================================================================
+
+# --- Contraseñas y claves -------------------------------------------
+# Conexión a MySQL, clave secreta de la aplicación y datos del SMTP.
+# En el repositorio solo va config/config_example.php (sin valores).
 config/config.php
+config/*.local.php
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# --- Datos de la base de datos -----------------------------------------
+# Solo se sube la ESTRUCTURA (data/tallerapp_db.sql), nunca datos ni copias.
+data/*
+!data/tallerapp_db.sql
+!data/.htaccess
+*.sql.gz
+*.sql.zip
+*.dump
+*backup*
+*copia*
+
+# --- Archivos que genera la aplicación --------------------------------
+# Correos guardados en desarrollo (llevan códigos y enlaces de acceso)
+almacen/*
+!almacen/.htaccess
+!almacen/.gitignore
+*.eml
+*.log
+
+# --- Editores y sistema -----------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,27 @@
+# Seguridad de Apache para Taller Genil.
+# Solo se sirven index.php y los archivos públicos (CSS, JS). Todo lo demás, 404.
+
+Options -Indexes
+DirectoryIndex index.php
+
+# Carpetas internas: nunca accesibles desde el navegador
+RedirectMatch 404 /(config|data|modelos|controladores|vistas|nucleo|herramientas|almacen)(/|$)
+
+# Git, archivos ocultos, copias, SQL, registros y correos guardados
+RedirectMatch 404 /\.
+RedirectMatch 404 \.(sql|md|log|ini|bak|old|orig|swp|eml|lock|dist|example)$
+
+# Cualquier PHP que no sea index.php
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+<Files "index.php">
+    Require all granted
+</Files>
+
+<IfModule mod_headers.c>
+    # También para CSS, JS e imágenes (las páginas PHP ya las envían)
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set Referrer-Policy "same-origin"
+</IfModule>

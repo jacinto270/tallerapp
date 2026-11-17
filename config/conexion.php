@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 // Devuelve la conexión con la base de datos del taller
 function conectar(): PDO
 {
@@ -12,6 +12,8 @@ function conectar(): PDO
             [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                // Consultas preparadas de verdad en MySQL (no simuladas por PHP)
+                PDO::ATTR_EMULATE_PREPARES => false,
             ]
         );
     } catch (PDOException $e) {

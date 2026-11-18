@@ -197,16 +197,19 @@ main { flex: 1; padding-top: 2rem; padding-bottom: 3rem; }
 .logo { width: 64px; height: auto; filter: drop-shadow(0 0 6px rgba(255, 46, 136, .8)); transition: transform .3s; }
 .marca:hover .logo { transform: translateX(4px) skewX(-6deg); }
 
-.menu { display: flex; flex-wrap: wrap; gap: .35rem; }
+/* Cabecera en dos filas: arriba el logo y, a la derecha, el tema y la sesión;
+   debajo, el menú a todo el ancho (el del admin tiene 9 apartados) */
+.menu { display: flex; flex-wrap: wrap; gap: .35rem; order: 3; width: 100%; }
+.boton-tema { margin-left: auto; }
 .menu a {
-  padding: .5rem .85rem;
+  padding: .5rem .72rem;
   border: 1px solid transparent;
   border-radius: 999px;
   color: var(--suave);
   text-decoration: none;
   font-family: var(--titulo);
-  font-size: .7rem;
-  letter-spacing: .08em;
+  font-size: .68rem;
+  letter-spacing: .06em;
   text-transform: uppercase;
   transition: color .2s, border-color .2s, box-shadow .2s;
 }

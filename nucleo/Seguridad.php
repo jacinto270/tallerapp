@@ -66,10 +66,14 @@ final class Seguridad
                 http_response_code(500);
                 exit('Falta configurar $claveSecreta en config/config.php.');
             }
-            // En producción todo va por HTTPS
+            // En producción todo va por HTTPS. El dominio sale de $urlBase; si se quedó
+            // en «localhost», del nombre que tiene configurado el servidor (no del navegador)
             if (!self::esHttps()) {
                 $base = parse_url((string) self::config('urlBase', ''));
                 $host = $base['host'] ?? '';
+                if ($host === '' || $host === 'localhost') {
+                    $host = (string) ($_SERVER['SERVER_NAME'] ?? '');
+                }
                 if ($host !== '') {
                     header('Location: https://' . $host . ($_SERVER['REQUEST_URI'] ?? '/'), true, 301);
                     exit;
@@ -108,7 +112,9 @@ final class Seguridad
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_trans_sid', '0');
 
-        $ruta = parse_url((string) self::config('urlBase', ''), PHP_URL_PATH) ?: '/';
+        // La cookie vale para la carpeta donde está index.php de verdad (no la de $urlBase):
+        // así funciona igual en http://localhost/tallerapp/ que en la raíz de un dominio
+        $ruta = rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/'))), '/') . '/';
         session_name('taller_sesion');
         session_set_cookie_params([
             'lifetime' => 0,

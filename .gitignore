@@ -41,3 +41,10 @@ almacen/*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Comprimidos del proyecto (llevarían config.php y .git)
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz

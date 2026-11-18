@@ -7,9 +7,10 @@ DirectoryIndex index.php
 # Carpetas internas: nunca accesibles desde el navegador
 RedirectMatch 404 /(config|data|modelos|controladores|vistas|nucleo|herramientas|almacen)(/|$)
 
-# Git, archivos ocultos, copias, SQL, registros y correos guardados
+# Git, archivos ocultos, copias, SQL, registros, correos guardados y comprimidos
+# (un .zip del proyecto llevaría config.php con las contraseñas)
 RedirectMatch 404 /\.
-RedirectMatch 404 \.(sql|md|log|ini|bak|old|orig|swp|eml|lock|dist|example)$
+RedirectMatch 404 (?i)\.(sql|md|log|ini|bak|old|orig|swp|eml|lock|dist|example|zip|rar|7z|tar|gz|tgz|bz2)$
 
 # Cualquier PHP que no sea index.php
 <FilesMatch "\.php$">

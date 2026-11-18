@@ -10,6 +10,9 @@ $password = "";
 $entorno = 'desarrollo';
 // Dirección pública de la aplicación, terminada en / (se usa en los enlaces de los correos)
 $urlBase = 'http://localhost/tallerapp/';
+// En producción se redirige siempre a HTTPS. Si el hosting ya usa HTTPS pero sale el error
+// «demasiadas redirecciones», pon false (pasa en algunos hostings gratuitos)
+$forzarHttps = true;
 // Clave secreta: genera una con  php -r "echo bin2hex(random_bytes(32));"
 $claveSecreta = '';
 

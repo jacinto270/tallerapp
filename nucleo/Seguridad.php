@@ -39,7 +39,10 @@ final class Seguridad
     public static function esHttps(): bool
     {
         return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
+            || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443
+            // Hostings con un intermediario delante (proxy): avisa así de que la visita llegó por HTTPS.
+            // Quien lo falsee solo cambia cómo se comporta su propia visita
+            || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
     }
 
     public static function ip(): string
@@ -68,7 +71,8 @@ final class Seguridad
             }
             // En producción todo va por HTTPS. El dominio sale de $urlBase; si se quedó
             // en «localhost», del nombre que tiene configurado el servidor (no del navegador)
-            if (!self::esHttps()) {
+            // $forzarHttps = false si el hosting ya sirve HTTPS pero PHP no lo detecta (evita redirecciones infinitas)
+            if (self::config('forzarHttps', true) && !self::esHttps()) {
                 $base = parse_url((string) self::config('urlBase', ''));
                 $host = $base['host'] ?? '';
                 if ($host === '' || $host === 'localhost') {
@@ -275,6 +279,13 @@ final class Seguridad
 
     public static function hashPassword(string $password): string
     {
-        return password_hash($password, PASSWORD_ARGON2ID);
+        return password_hash($password, self::algoritmoPassword());
+    }
+
+    // Argon2id si el PHP del servidor lo trae; si no (algunos hostings), bcrypt.
+    // Al entrar, las contraseñas se pasan solas al mejor algoritmo disponible
+    public static function algoritmoPassword(): string
+    {
+        return defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
     }
 }

@@ -64,7 +64,7 @@ class AccesoControlador extends Controlador
             return;
         }
 
-        if (password_needs_rehash($usuario['password_hash'], PASSWORD_ARGON2ID)) {
+        if (password_needs_rehash($usuario['password_hash'], Seguridad::algoritmoPassword())) {
             $this->usuarios->actualizarHash($usuario['id'], Seguridad::hashPassword($password));
         }
 
